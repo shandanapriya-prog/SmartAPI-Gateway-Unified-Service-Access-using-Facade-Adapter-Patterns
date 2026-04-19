@@ -1,0 +1,115 @@
+// SmartAPI Gateway Mini Project
+// Demonstrates Facade + Adapter Design Patterns
+
+// =======================
+// STEP 1: STANDARD INTERFACES
+// ======================
+
+interface PaymentService {
+    void pay(double amount);
+}
+
+interface NotificationService {
+    void sendNotification(String message);
+}
+
+interface OrderService {
+    void placeOrder(String product);
+}
+
+// =======================
+// STEP 2: EXISTING (LEGACY / THIRD-PARTY) CLASSES
+// =======================
+
+// Incompatible payment API
+class OldPaymentGateway {
+    void makeTransaction(double amt) {
+        System.out.println("Payment processed via OLD gateway: ₹" + amt);
+    }
+}
+
+// Incompatible notification API
+class ThirdPartyNotifier {
+    void notifyUser(String msg) {
+        System.out.println("Notification sent via THIRD-PARTY: " + msg);
+    }
+}
+
+// =======================
+// STEP 3: ADAPTER CLASSES
+// =======================
+
+// Adapter for Payment
+class PaymentAdapter implements PaymentService {
+    private OldPaymentGateway oldGateway;
+
+    public PaymentAdapter() {
+        this.oldGateway = new OldPaymentGateway();
+    }
+
+    public void pay(double amount) {
+        oldGateway.makeTransaction(amount);
+    }
+}
+
+// Adapter for Notification
+class NotificationAdapter implements NotificationService {
+    private ThirdPartyNotifier notifier;
+
+    public NotificationAdapter() {
+        this.notifier = new ThirdPartyNotifier();
+    }
+
+    public void sendNotification(String message) {
+        notifier.notifyUser(message);
+    }
+}
+
+// =======================
+// STEP 4: DIRECT SERVICE IMPLEMENTATION
+// =======================
+
+class OrderServiceImpl implements OrderService {
+    public void placeOrder(String product) {
+        System.out.println("Order placed for: " + product);
+    }
+}
+
+// =======================
+// STEP 5: FACADE (API GATEWAY)
+// =======================
+
+class APIGateway {
+    private PaymentService paymentService;
+    private NotificationService notificationService;
+    private OrderService orderService;
+
+    public APIGateway() {
+        paymentService = new PaymentAdapter();
+        notificationService = new NotificationAdapter();
+        orderService = new OrderServiceImpl();
+    }
+
+    public void processOrder(String product, double amount) {
+        System.out.println("\n--- API GATEWAY START ---");
+
+        orderService.placeOrder(product);
+        paymentService.pay(amount);
+        notificationService.sendNotification("Order confirmed for " + product);
+
+        System.out.println("--- API GATEWAY END ---\n");
+    }
+}
+
+// =======================
+// STEP 6: MAIN CLASS
+// =======================
+
+public class Main {
+    public static void main(String[] args) {
+        APIGateway api = new APIGateway();
+
+        api.processOrder("Laptop", 55000);
+        api.processOrder("Mobile Phone", 20000);
+    }
+}
